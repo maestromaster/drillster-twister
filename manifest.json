@@ -1,0 +1,20 @@
+{
+  "manifest_version": 2,
+  "name": "Drillster twister",
+  "author": "Igor Lakhmotkin",
+  "version": "0.1",
+  "content_scripts": [
+  {
+    "matches": [
+      "https://drillster.com/*","https://www.drillster.com/*"
+    ],
+    "css": ["styles.css"],
+    "js": ["jquery-3.4.1.min.js", "md5.js", "content.js"]
+  }
+  ],
+  "background": {
+  "scripts": ["background.js"],
+  "persistent": false
+  },
+  "permissions": ["storage"]
+}

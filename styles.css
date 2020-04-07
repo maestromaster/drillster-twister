@@ -1,0 +1,31 @@
+.correct_answer {
+  border: 5px solid green;
+}
+
+.message-box {
+	clear: both;
+}
+
+.answer-hash {
+	color: grey;
+	font-size: 10px;
+}
+
+.message-box > p {
+	border-radius: 5px;
+	padding: 10px;
+	display: block;
+}
+
+.message-warning {
+	border-radius: 5px;
+	border: 5px solid moccasin; 
+}
+
+.message-success {
+	border: 5px solid #7FFFD4; 
+}
+
+.message-error {
+	border: 5px solid salmon; 
+}
