@@ -1,8 +1,16 @@
 
 console.log('Starting ' + window.location.href);
 
-var questionTitle = "";
+var pageUrl = window.location.href;
+if (!pageUrl.includes("widget")) {
+	var urlParts = pageUrl.split('/');
+	var drillId = urlParts[urlParts.length-2];
+	var newUrl = `https://www.drillster.com/widgets/player/#/${drillId}?id=player222&can_close=true`;
+	$('body').prepend(`<div class="new-url">The extension won't work here. Please <a href="${newUrl}" target="_blank">Go on page where Extension works</a></d>`);
+	console.log("DrillId = " + drillId);
+}
 
+var questionTitle = "";
 var frame = $(document).find("iframe").eq(0);
 var frameContent = frame.contentDocument;
 window.setInterval(function(){
@@ -12,12 +20,14 @@ window.setInterval(function(){
 		requestAnswer(questionTitle);
 		createAnswersArea();
 		addMd5HashesToAnswers();
-		bindButton();
 	}
 }, 1000);
 
-createAnswersArea();
+window.setInterval(function(){
+	checkIfCorrectAnswersAppear();
+}, 1000);
 
+createAnswersArea();
 
 function createAnswersArea() {
 	if (!$( "#answers", frameContent ).length) {
@@ -29,10 +39,10 @@ function showMessage(message) {
 	$( "#answers", frameContent ).html( message );
 }
 
-function bindButton(){
-	$("button[ref='submitButton']", frameContent).one("click", function() {
+function checkIfCorrectAnswersAppear() {
+	if ($("i.au-target:contains('check_circle')").length) {
 		saveAnswers();
-	})
+	}
 }
 
 function extractQuestionTitle() {
@@ -41,33 +51,39 @@ function extractQuestionTitle() {
 }
 
 function saveAnswers() {
+	if ($("#answers > p:contains('Saved')").length || $("#answers > p:contains('Error')").length) {
+		console.log('Already saved');
+		return;
+	}
 	var md5 = MD5(questionTitle);
 	var indexArray = [];
 	indexArray.push(md5);
 	console.log('Question: ' + questionTitle);
 	console.log('Question MD5: ' + md5);
-	setTimeout(function(){
-		var answers = [];
-		$("i.au-target:contains('check_circle')", frameContent).each(function (el) {
-			var answerText = $(this).closest('label').find('markup-text > div.au-target').text();
-			var answerMd5 = MD5(answerText);
-			answers.push({"md5":answerMd5, "text":answerText});
+	var answers = [];
+	$("i.au-target:contains('check_circle')", frameContent).each(function (el) {
+		var answerText = $(this).closest('label').find('markup-text > div.au-target').text();
+		var answerMd5 = MD5(answerText);
+		answers.push({"md5":answerMd5, "text":answerText});
+	});
+	console.log('Answers: ', answers);
+	var newEntry = {};
+	newEntry[md5] = answers;
+	if (!answers.length) {
+		console.log('Answers are empty');
+		return
+	}
+	chrome.storage.local.set(newEntry, function() {
+	  console.log('Answers saved');
+	  chrome.storage.local.get(indexArray, function(items) {
+	  	  console.log("Saved ", items);
+		  if (items[md5] && items[md5].length) {
+		  	showMessage(`<p class="message-success">Saved ${items[md5].length} answers.</p>`);
+		  } else {
+		  	showMessage(`<p class="message-error">Error: Cannot save in storage ${md5}</p>`);
+		  }
 		});
-		console.log('Answers: ', answers);
-		var newEntry = {};
-		newEntry[md5] = answers;
-		chrome.storage.local.set(newEntry, function() {
-		  console.log('Settings saved');
-		  chrome.storage.local.get(indexArray, function(items) {
-		  	  console.log("Saved ", items);
-			  if (items[md5] && items[md5].length) {
-			  	showMessage(`<p class="message-success">Saved ${items[md5].length} answers.</p>`);
-			  } else {
-			  	showMessage(`<p class="message-error">Error: Cannot save in storage ${md5}</p>`);
-			  }
-			});
-		});
-	}, 1500);
+	});
 }
 
 function addMd5HashesToAnswers() {

@@ -29,3 +29,8 @@
 .message-error {
 	border: 5px solid salmon; 
 }
+
+.new-url {
+	padding: 10px;
+	background: white;
+}
